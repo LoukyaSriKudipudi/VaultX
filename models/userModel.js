@@ -35,6 +35,7 @@ const userSchema = new mongoose.Schema({
   passwordChangedAt: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,
+  createdAt: { type: Date, default: Date.now },
 });
 
 // password hash

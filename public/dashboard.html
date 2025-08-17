@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VaultX 🔐 - Dashboard</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: #000;
+        color: #fff;
+        display: flex;
+        height: 100vh;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        width: 250px;
+        background: #111;
+        padding: 30px 20px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .sidebar h2 {
+        color: #ffcc00;
+        margin-bottom: 40px;
+        font-size: 22px;
+        text-align: center;
+      }
+
+      .sidebar a {
+        color: #fff;
+        text-decoration: none;
+        display: block;
+        padding: 12px 15px;
+        margin: 8px 0;
+        border-radius: 6px;
+        transition: background 0.3s;
+      }
+
+      .sidebar a:hover,
+      .sidebar a.active {
+        background: #ffcc00;
+        color: #000;
+      }
+
+      /* Main Content */
+      .main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Header */
+      header {
+        background: rgba(0, 0, 0, 0.85);
+        padding: 20px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #222;
+      }
+
+      header h1 {
+        font-size: 24px;
+      }
+
+      header .user {
+        font-weight: bold;
+        color: #ffcc00;
+      }
+
+      /* Dashboard Content */
+      .content {
+        padding: 30px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 25px;
+      }
+
+      .card {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+      }
+
+      .card h3 {
+        margin-bottom: 15px;
+        color: #ffcc00;
+        font-size: 20px;
+      }
+
+      .card p {
+        font-size: 14px;
+        color: #ccc;
+      }
+
+      .btn {
+        display: inline-block;
+        padding: 10px 15px;
+        margin-top: 10px;
+        border: none;
+        border-radius: 6px;
+        background: #ffcc00;
+        color: #000;
+        font-weight: bold;
+        cursor: pointer;
+        text-decoration: none;
+        transition: 0.3s;
+      }
+
+      .btn:hover {
+        background: #ffd633;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <h2>VaultX 🔐</h2>
+      <a href="dashboard.html" class="active">Dashboard</a>
+      <a href="links.html">My Links</a>
+      <a href="analytics.html">Analytics</a>
+      <a href="settings.html">Settings</a>
+      <a href="logout.html">Logout</a>
+    </div>
+
+    <!-- Main -->
+    <div class="main">
+      <!-- Header -->
+      <header>
+        <h1>Dashboard</h1>
+        <div class="user">Welcome, User</div>
+      </header>
+
+      <!-- Content -->
+      <div class="content">
+        <!-- Recent Activity -->
+        <div class="card">
+          <h3>Recent Activity</h3>
+          <p>🔗 You created a new link 2 hours ago</p>
+          <p>📊 Your link received 56 clicks yesterday</p>
+          <p>🔒 Password updated last week</p>
+        </div>
+
+        <!-- Saved Links -->
+        <div class="card">
+          <h3>Saved Links</h3>
+          <p>1. https://example.com/report</p>
+          <p>2. https://securevault.com/data</p>
+          <p>3. https://yoursite.com/login</p>
+          <a href="links.html" class="btn">View All</a>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+          <h3>Quick Actions</h3>
+          <a href="create-link.html" class="btn">+ Create New Link</a><br />
+          <a href="analytics.html" class="btn">View Analytics</a><br />
+          <a href="settings.html" class="btn">Update Profile</a>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
