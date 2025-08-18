@@ -1,31 +1,37 @@
 const crypto = require("crypto");
 
-// derive a 32-byte key using scrypt for AES-256
-function getKey(secret) {
+// derive a 32-byte key using scrypt from secret in .env
+function getKey() {
   return new Promise((resolve, reject) => {
-    crypto.scrypt(secret, "vault-salt", 32, (err, derivedKey) => {
-      if (err) reject(err);
-      else resolve(derivedKey);
-    });
+    crypto.scrypt(
+      process.env.CRYPTO_SECRET,
+      "vault-salt",
+      32,
+      (err, derivedKey) => {
+        if (err) reject(err);
+        else resolve(derivedKey);
+      }
+    );
   });
 }
 
-// Encrypt a value
-async function encryptValue(value, secret) {
-  const key = await getKey(secret);
-  const iv = crypto.randomBytes(16); // 16 bytes IV
+// Encrypt a value using AES-256-GCM
+async function encryptValue(value) {
+  const key = await getKey();
+  const iv = crypto.randomBytes(16); // unique 16-byte IV
   const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
 
   let encrypted = cipher.update(value, "utf8", "hex");
   encrypted += cipher.final("hex");
   const authTag = cipher.getAuthTag().toString("hex");
 
+  // return iv + authTag + ciphertext
   return iv.toString("hex") + ":" + authTag + ":" + encrypted;
 }
 
 // Decrypt a value
-async function decryptValue(encryptedValue, secret) {
-  const key = await getKey(secret);
+async function decryptValue(encryptedValue) {
+  const key = await getKey();
   const [ivHex, authTagHex, encryptedText] = encryptedValue.split(":");
 
   const decipher = crypto.createDecipheriv(
