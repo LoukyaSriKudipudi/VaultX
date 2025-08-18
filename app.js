@@ -35,6 +35,10 @@ const limiter = rateLimit({
   message: "Too many requests from this IP, please try again in an hour",
 });
 
+app.get("/ping", (req, res) => {
+  res.json({ reply: "pong" });
+});
+
 app.use("/v1", limiter);
 
 app.use("/v1/users", userRouter);
