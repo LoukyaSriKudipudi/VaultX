@@ -9,7 +9,7 @@ exports.saveData = async (req, res) => {
     const { title, value } = req.body;
     const userId = req.user._id;
 
-    const encryptedValue = encryptValue(value);
+    const encryptedValue = await encryptValue(value);
 
     const data = await Data.create({
       userId,
@@ -37,7 +37,7 @@ exports.getData = async (req, res) => {
 
     const encryptedData = await Data.find({ userId });
 
-    const decryptedData = encryptedData.map((item) => ({
+    const decryptedData = await encryptedData.map((item) => ({
       _id: item._id,
       title: item.title,
       value: decryptValue(item.encryptedValue),
@@ -127,7 +127,7 @@ exports.editItem = async (req, res) => {
       });
     }
 
-    const encryptedValue = encryptValue(value);
+    const encryptedValue = await encryptValue(value);
 
     const item = await Data.findOne({ _id: itemId, userId });
     if (!item) {
@@ -218,7 +218,7 @@ exports.viewItem = async (req, res) => {
     }
 
     // Decrypt the value before sending
-    const decryptedValue = decryptValue(item.encryptedValue);
+    const decryptedValue = await decryptValue(item.encryptedValue);
 
     res.status(200).json({
       status: "success",

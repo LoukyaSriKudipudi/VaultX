@@ -29,22 +29,33 @@ async function encryptValue(value) {
   return iv.toString("hex") + ":" + authTag + ":" + encrypted;
 }
 
-// Decrypt a value
+// Decrypt a value safely
 async function decryptValue(encryptedValue) {
+  if (!encryptedValue) return null; // skip if empty or null
+
   const key = await getKey();
-  const [ivHex, authTagHex, encryptedText] = encryptedValue.split(":");
+  const parts = encryptedValue.split(":");
 
-  const decipher = crypto.createDecipheriv(
-    "aes-256-gcm",
-    key,
-    Buffer.from(ivHex, "hex")
-  );
-  decipher.setAuthTag(Buffer.from(authTagHex, "hex"));
+  if (parts.length !== 3) return null; // invalid format
 
-  let decrypted = decipher.update(encryptedText, "hex", "utf8");
-  decrypted += decipher.final("utf8");
+  const [ivHex, authTagHex, encryptedText] = parts;
 
-  return decrypted;
+  try {
+    const decipher = crypto.createDecipheriv(
+      "aes-256-gcm",
+      key,
+      Buffer.from(ivHex, "hex")
+    );
+    decipher.setAuthTag(Buffer.from(authTagHex, "hex"));
+
+    let decrypted = decipher.update(encryptedText, "hex", "utf8");
+    decrypted += decipher.final("utf8");
+
+    return decrypted;
+  } catch (err) {
+    console.error("Decryption failed:", err.message);
+    return null; // skip corrupted or invalid data
+  }
 }
 
 module.exports = { encryptValue, decryptValue };
