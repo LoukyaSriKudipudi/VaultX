@@ -19,17 +19,6 @@
         overflow-x: hidden;
       }
 
-      /* Background video */
-      video {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        object-fit: cover;
-        z-index: -1;
-        filter: brightness(0.1);
-      }
-
       /* Header */
       header {
         position: fixed;
@@ -66,12 +55,21 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        min-height: 100vh;
+        margin-top: 7rem;
+      }
+      @media (orientation: portrait) {
+        .login-container {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+
+          margin-top: 7rem;
+        }
       }
 
       .login-box {
         background: rgba(0, 0, 0, 0.75);
-        padding: 40px 30px;
+        padding: 30px 30px;
         border-radius: 12px;
         width: 100%;
         max-width: 400px;
