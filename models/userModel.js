@@ -55,10 +55,10 @@ userSchema.pre("save", function (next) {
 
 // password check
 userSchema.methods.checkPassword = async function (
-  loginPassword,
+  currentPassword,
   userPassword
 ) {
-  return await bcrypt.compare(loginPassword, userPassword);
+  return await bcrypt.compare(currentPassword, userPassword);
 };
 
 // jwt issued and password changed at time check

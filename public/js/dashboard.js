@@ -1,0 +1,193 @@
+// ---------------------
+// DOM Elements
+// ---------------------
+const token = localStorage.getItem("token");
+const logout = document.querySelector("#logout");
+const tableBody = document.getElementById("tableBody");
+const searchInput = document.getElementById("search");
+const selectAllCheckbox = document.querySelector(
+  "thead input[type='checkbox']"
+);
+
+const deleteSelectedBtn = document.getElementById("deleteSelected");
+
+let searchQuery = "";
+
+// ---------------------
+// Auth check
+// ---------------------
+if (!token) {
+  window.location.href = "/login.html";
+}
+
+// Logout
+logout.addEventListener("click", () => {
+  localStorage.removeItem("token");
+  window.location.href = "/login.html";
+});
+
+// ---------------------
+// Fetch secrets from API
+// ---------------------
+async function getSecrets() {
+  const url = searchQuery
+    ? `/v1/data/vault?search=${encodeURIComponent(searchQuery)}`
+    : "/v1/data/vault";
+
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      Authorization: "Bearer " + token,
+    },
+  });
+
+  const data = await res.json();
+
+  // Update welcome message
+  const welcomeMessage = document.querySelector("#welcomeMessage");
+  if (data.username) {
+    welcomeMessage.textContent = `Welcome back, ${data.username} 👋`;
+  }
+
+  return data.results || [];
+}
+
+// ---------------------
+// Render secrets
+// ---------------------
+function renderSecrets(secrets) {
+  tableBody.innerHTML = "";
+
+  if (!secrets.length) {
+    const row = document.createElement("tr");
+    row.innerHTML = `<td colspan="4" style="text-align:center; color:#aaa">No secrets found</td>`;
+    tableBody.appendChild(row);
+    return;
+  }
+
+  secrets.forEach((secret, index) => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td><input class="rowCheckbox" type="checkbox" data-id="${
+        secret._id
+      }" /></td>
+      <td>${index + 1}</td>
+      <td>${secret.title}</td>
+      <td class="deleteViewBtns">
+        <button class="deleteBtn" data-id="${secret._id}">Delete</button>
+        <button class="viewBtn" data-id="${secret._id}">View</button>
+      </td>
+    `;
+    tableBody.appendChild(row);
+  });
+}
+
+// ---------------------
+// Load secrets
+// ---------------------
+async function loadAndRenderSecrets() {
+  const secrets = await getSecrets();
+  renderSecrets(secrets);
+  updateSelectAllCheckbox();
+}
+
+// ---------------------
+// Delete secret
+// ---------------------
+async function deleteSecret(secretId) {
+  if (!confirm("Are you sure you want to delete this secret?")) return;
+
+  await fetch(`/v1/data/vault/${secretId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: "Bearer " + token,
+    },
+  });
+
+  loadAndRenderSecrets();
+}
+
+// ---------------------
+// Delete multiple secrets
+// ---------------------
+deleteSelectedBtn.addEventListener("click", async () => {
+  const selectedCheckboxes = document.querySelectorAll(".rowCheckbox:checked");
+  if (selectedCheckboxes.length === 0) {
+    alert("Please select at least one item to delete");
+    return;
+  }
+
+  if (!confirm(`Delete ${selectedCheckboxes.length} selected item(s)?`)) return;
+
+  const itemIds = Array.from(selectedCheckboxes).map((cb) => cb.dataset.id);
+  const res = await fetch("/v1/data/vault/deleteMultiple", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token,
+    },
+    body: JSON.stringify({ itemIds }),
+  });
+
+  const data = await res.json();
+  alert(data.message || "Items deleted successfully");
+
+  loadAndRenderSecrets();
+});
+
+// ---------------------
+// Event delegation for table buttons
+// ---------------------
+tableBody.addEventListener("click", (e) => {
+  const target = e.target;
+
+  // Delete
+  if (target.classList.contains("deleteBtn")) {
+    const secretId = target.dataset.id;
+    deleteSecret(secretId);
+  }
+
+  // View
+  if (target.classList.contains("viewBtn")) {
+    const secretId = target.dataset.id;
+    window.location.href = `/secret.html#${secretId}`;
+  }
+});
+
+// ---------------------
+// Search functionality
+// ---------------------
+searchInput.addEventListener("input", () => {
+  searchQuery = searchInput.value.trim();
+  loadAndRenderSecrets();
+});
+
+// ---------------------
+// Select all functionality
+// ---------------------
+selectAllCheckbox.addEventListener("change", () => {
+  const checkboxes = document.querySelectorAll(".rowCheckbox");
+  checkboxes.forEach((cb) => (cb.checked = selectAllCheckbox.checked));
+});
+
+function updateSelectAllCheckbox() {
+  const checkboxes = document.querySelectorAll(".rowCheckbox");
+  if (!checkboxes.length) {
+    selectAllCheckbox.checked = false;
+    return;
+  }
+  const allChecked = Array.from(checkboxes).every((cb) => cb.checked);
+  selectAllCheckbox.checked = allChecked;
+}
+
+// Update select all when a row checkbox changes
+tableBody.addEventListener("change", (e) => {
+  if (e.target.classList.contains("rowCheckbox")) {
+    updateSelectAllCheckbox();
+  }
+});
+
+// ---------------------
+// Initial load
+// ---------------------
+loadAndRenderSecrets();

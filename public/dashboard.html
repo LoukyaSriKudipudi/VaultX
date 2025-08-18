@@ -5,114 +5,265 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>VaultX 🔐 - Dashboard</title>
     <style>
-      body {
+      * {
         margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
         font-family: "Segoe UI", Arial, sans-serif;
-        background: #000;
         color: #fff;
+        background: #000;
         display: flex;
-        height: 100vh;
+        min-height: 100vh;
+        overflow-x: hidden;
       }
 
       /* Sidebar */
       .sidebar {
         width: 250px;
-        background: #111;
-        padding: 30px 20px;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 20px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
         display: flex;
         flex-direction: column;
+        backdrop-filter: blur(6px);
       }
 
       .sidebar h2 {
-        color: #ffcc00;
-        margin-bottom: 40px;
         font-size: 22px;
-        text-align: center;
+        margin-bottom: 30px;
+        color: #ffcc00;
       }
 
       .sidebar a {
-        color: #fff;
+        color: #ddd;
         text-decoration: none;
         display: block;
-        padding: 12px 15px;
-        margin: 8px 0;
+        margin: 12px 0;
+        padding: 10px;
         border-radius: 6px;
-        transition: background 0.3s;
+        transition: background 0.3s ease, color 0.3s ease;
       }
 
-      .sidebar a:hover,
-      .sidebar a.active {
+      .sidebar a:hover {
         background: #ffcc00;
         color: #000;
       }
 
       /* Main Content */
       .main {
+        margin-left: 250px;
+        padding: 20px;
         flex: 1;
         display: flex;
         flex-direction: column;
       }
 
-      /* Header */
-      header {
-        background: rgba(0, 0, 0, 0.85);
-        padding: 20px 30px;
+      .main h1 {
+        font-size: 28px;
+        margin-bottom: 20px;
+        color: #ffcc00;
+      }
+
+      /* Vault Section */
+      .vault {
+        background: rgba(0, 0, 0, 0.7);
+        padding: 20px;
+        border-radius: 10px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .vault h2 {
+        margin-bottom: 15px;
+        font-size: 22px;
+        color: #ffcc00;
+      }
+
+      /* Search + Add */
+      #searchContainer {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid #222;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
       }
 
-      header h1 {
-        font-size: 24px;
-      }
-
-      header .user {
-        font-weight: bold;
-        color: #ffcc00;
-      }
-
-      /* Dashboard Content */
-      .content {
-        padding: 30px;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 25px;
-      }
-
-      .card {
-        background: rgba(255, 255, 255, 0.05);
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
-      }
-
-      .card h3 {
-        margin-bottom: 15px;
-        color: #ffcc00;
-        font-size: 20px;
-      }
-
-      .card p {
-        font-size: 14px;
-        color: #ccc;
-      }
-
-      .btn {
+      .add-secret {
         display: inline-block;
-        padding: 10px 15px;
-        margin-top: 10px;
-        border: none;
-        border-radius: 6px;
+        padding: 12px 20px;
         background: #ffcc00;
         color: #000;
+        border-radius: 6px;
         font-weight: bold;
-        cursor: pointer;
         text-decoration: none;
-        transition: 0.3s;
+        transition: background 0.3s ease, transform 0.2s ease;
+        margin-bottom: 10px;
       }
 
-      .btn:hover {
+      .add-secret:hover {
+        background: #ffd633;
+        transform: translateY(-2px);
+      }
+
+      #search {
+        padding: 10px 16px;
+        width: 220px;
+        max-width: 100%;
+        border-radius: 12px;
+        border: none;
+        outline: none;
+        font-size: 14px;
+        font-weight: 500;
+        color: #000;
+        background: #ffcc00;
+        transition: all 0.3s ease;
+      }
+
+      #search::placeholder {
+        color: #333;
+        font-weight: 400;
+      }
+
+      #search:focus {
+        transform: scale(1.02);
+      }
+
+      /* Table */
+      .table-container {
+        flex: 1;
+        overflow-y: auto;
+        border-radius: 10px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      thead {
+        background: rgba(255, 204, 0, 0.2);
+        color: #ffcc00;
+        font-weight: bold;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+
+      th,
+      td {
+        padding: 12px 15px;
+        text-align: left;
+      }
+
+      tbody tr:nth-child(even) {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      /* Buttons inside table */
+      .deleteViewBtns {
+        display: flex;
+        gap: 8px;
+      }
+
+      .deleteBtn,
+      .viewBtn {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 14px;
+        transition: background 0.2s ease, transform 0.1s ease;
+      }
+
+      .deleteBtn {
+        background: #e74c3c;
+        color: #fff;
+      }
+
+      .deleteBtn:hover {
+        background: #c0392b;
+        transform: translateY(-1px);
+      }
+
+      .viewBtn {
+        background: #3498db;
+        color: #fff;
+      }
+
+      .viewBtn:hover {
+        background: #2980b9;
+        transform: translateY(-1px);
+      }
+
+      /* Footer */
+      footer {
+        text-align: center;
+        padding: 20px;
+        font-size: 14px;
+        color: #aaa;
+        margin-top: 20px;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .sidebar {
+          width: 200px;
+        }
+        .main {
+          margin-left: 200px;
+        }
+      }
+
+      @media (max-width: 600px) {
+        .sidebar {
+          position: fixed;
+          width: 100%;
+          flex-direction: row;
+          justify-content: space-between;
+          padding: 10px 20px;
+        }
+        .sidebar h2 {
+          display: none;
+        }
+        .main {
+          margin-left: 0;
+          padding-top: 100px;
+        }
+        #searchContainer {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        #search,
+        .add-secret {
+          width: 100%;
+          margin-bottom: 10px;
+        }
+        .deleteViewBtns {
+          flex-direction: column;
+        }
+      }
+
+      /* Scrollbar styling */
+      .table-container::-webkit-scrollbar {
+        width: 5px;
+      }
+      .table-container::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+      }
+      .table-container::-webkit-scrollbar-thumb {
+        background: #ffcc00;
+        border-radius: 4px;
+      }
+      .table-container::-webkit-scrollbar-thumb:hover {
         background: #ffd633;
       }
     </style>
@@ -121,48 +272,51 @@
     <!-- Sidebar -->
     <div class="sidebar">
       <h2>VaultX 🔐</h2>
-      <a href="dashboard.html" class="active">Dashboard</a>
-      <a href="links.html">My Links</a>
-      <a href="analytics.html">Analytics</a>
-      <a href="settings.html">Settings</a>
-      <a href="logout.html">Logout</a>
+      <a href="#">Dashboard</a>
+      <a href="/secret.html">Add Secret</a>
+      <a href="/settings.html">Settings</a>
+      <a href="login.html" id="logout">Logout</a>
     </div>
 
-    <!-- Main -->
+    <!-- Main Dashboard -->
     <div class="main">
-      <!-- Header -->
-      <header>
-        <h1>Dashboard</h1>
-        <div class="user">Welcome, User</div>
-      </header>
+      <h1 id="welcomeMessage">Welcome back, User 👋</h1>
 
-      <!-- Content -->
-      <div class="content">
-        <!-- Recent Activity -->
-        <div class="card">
-          <h3>Recent Activity</h3>
-          <p>🔗 You created a new link 2 hours ago</p>
-          <p>📊 Your link received 56 clicks yesterday</p>
-          <p>🔒 Password updated last week</p>
+      <!-- Vault Items -->
+      <div class="vault">
+        <h2>Your Secrets</h2>
+        <div id="searchContainer">
+          <a href="/secret.html" class="add-secret">+ Add New Secret</a>
+          <input id="search" type="text" placeholder="Search" />
+          <button
+            id="deleteSelected"
+            class="add-secret"
+            style="background: #e74c3c; color: #fff"
+          >
+            Delete Selected
+          </button>
         </div>
 
-        <!-- Saved Links -->
-        <div class="card">
-          <h3>Saved Links</h3>
-          <p>1. https://example.com/report</p>
-          <p>2. https://securevault.com/data</p>
-          <p>3. https://yoursite.com/login</p>
-          <a href="links.html" class="btn">View All</a>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="card">
-          <h3>Quick Actions</h3>
-          <a href="create-link.html" class="btn">+ Create New Link</a><br />
-          <a href="analytics.html" class="btn">View Analytics</a><br />
-          <a href="settings.html" class="btn">Update Profile</a>
+        <div class="table-container">
+          <table id="table">
+            <thead>
+              <tr>
+                <th><input type="checkbox" /></th>
+                <th>S. No</th>
+                <th>Title</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <!-- Secrets will be injected here -->
+            </tbody>
+          </table>
         </div>
       </div>
+
+      <footer>&copy; 2025 VaultX. All rights reserved.</footer>
     </div>
+
+    <script src="/js/dashboard.js"></script>
   </body>
 </html>

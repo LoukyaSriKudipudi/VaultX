@@ -1,6 +1,7 @@
 const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 const Data = require("../models/dataModel");
+const path = require("path");
 
 // Generate JWT token
 const signToken = (id) => {
@@ -148,7 +149,7 @@ exports.forgotPassword = async (req, res) => {
 
     const resetURL = `${req.protocol}://${req.get(
       "host"
-    )}/v1/users/resetpassword/${resetToken}`;
+    )}/v1/users/resetPassword/${resetToken}`;
 
     await sendResetMail(user.email, resetURL, user.username, req.get("host"));
     res.status(200).json({
@@ -249,12 +250,122 @@ exports.deleteUserConfirm = async (req, res) => {
 
     res.status(200).json({
       status: "success",
-      data: {
-        username: user.name,
-        message: `Deleting your account will permanently remove all your saved data (${dataCount} items). This action cannot be undone.`,
-      },
+      username: user.username,
+      message: `Deleting your account will permanently remove all your saved data (${dataCount} items). This action cannot be undone.`,
     });
   } catch (err) {
     res.status(500).json({ status: "error", message: "Something went wrong" });
+  }
+};
+
+// reset page
+exports.resetPasswordPage = async (req, res) => {
+  try {
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(req.params.token)
+      .digest("hex");
+
+    const user = await User.findOne({
+      passwordResetToken: hashedToken,
+      passwordResetExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).send("Invalid or expired token");
+    }
+
+    res.sendFile(path.join(__dirname, "..", "public", "resetPassword.html"));
+  } catch (err) {
+    res.status(500).send("Something went wrong");
+  }
+};
+
+// edit user name and email and password
+exports.editUserNameAndEmail = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({
+        status: "fail",
+        message: "User not found",
+      });
+    }
+
+    if (!req.body.name || !req.body.email) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Both name and email are required",
+      });
+    }
+
+    user.username = req.body.name;
+    user.email = req.body.email;
+
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(200).json({
+      status: "success",
+      message: "Details updated successfully",
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      status: "error",
+      message: "Something went wrong while updating user details",
+    });
+  }
+};
+
+// change password
+exports.ChangePassword = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select("+password");
+
+    if (!user) {
+      return res.status(404).json({
+        status: "fail",
+        message: "User not found",
+      });
+    }
+
+    // Check current password
+    const isMatch = await user.checkPassword(
+      req.body.currentPassword,
+      user.password
+    );
+
+    if (!isMatch) {
+      return res.status(401).json({
+        status: "fail",
+        message: "Current password is incorrect",
+      });
+    }
+
+    // Update to new password
+    user.password = req.body.newPassword;
+    user.passwordConfirm = req.body.newPasswordConfirm;
+
+    await user.save();
+
+    const token = signToken(user._id);
+
+    return res.status(200).json({
+      status: "success",
+      message: "Password updated successfully",
+      token,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      status: "error",
+      message: "Something went wrong while updating password",
+    });
   }
 };

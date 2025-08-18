@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>VaultX 🔐 - Account Settings</title>
     <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
       body {
         margin: 0;
         font-family: "Segoe UI", Arial, sans-serif;
@@ -132,6 +137,13 @@
       .danger-zone button:hover {
         background: #ff6666;
       }
+
+      #nameandEmailUpdateFormMessage,
+      #passwordUpdateMessage,
+      #userDeleteMessage {
+        color: #fff;
+        margin-top: 10px;
+      }
     </style>
   </head>
   <body>
@@ -139,8 +151,6 @@
       <h2>VaultX 🔐</h2>
       <nav>
         <a href="dashboard.html">Dashboard</a>
-        <a href="settings.html">Settings</a>
-        <a href="logout.html">Logout</a>
       </nav>
     </header>
 
@@ -149,7 +159,7 @@
         <h2>Account Settings</h2>
 
         <!-- Profile Info -->
-        <form action="/api/update-profile" method="POST">
+        <form id="nameandEmailUpdateForm">
           <h3>Profile Information</h3>
           <label for="name">Full Name</label>
           <input
@@ -168,12 +178,12 @@
             placeholder="your@email.com"
             required
           />
-
+          <p id="nameandEmailUpdateFormMessage"></p>
           <button type="submit">Update Profile</button>
         </form>
 
         <!-- Change Password -->
-        <form action="/api/update-password" method="POST">
+        <form id="passwordUpdateForm">
           <h3>Change Password</h3>
           <label for="current-password">Current Password</label>
           <input
@@ -197,10 +207,11 @@
           <input
             type="password"
             id="confirm-password"
-            name="confirmPassword"
+            name="newPasswordConfirm"
             placeholder="Confirm Password"
             required
           />
+          <p id="passwordUpdateMessage"></p>
 
           <button type="submit">Update Password</button>
         </form>
@@ -212,11 +223,15 @@
             Deleting your account is irreversible. All your saved data will be
             permanently removed.
           </p>
-          <form action="/api/delete-account" method="POST">
+          <form id="deleteUserForm">
             <button type="submit">Delete Account</button>
           </form>
+          <p id="userNameMessage"></p>
+          <p id="userDeleteMessage"></p>
+          <div id="userDeleteConfirmContainer"></div>
         </div>
       </div>
     </div>
+    <script src="/js/settings.js"></script>
   </body>
 </html>

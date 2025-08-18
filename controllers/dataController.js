@@ -1,12 +1,13 @@
-const { title } = require("process");
 const Data = require("../models/dataModel");
+const User = require("../models/userModel");
+const mongoose = require("mongoose");
 
 // savedata
 const { encryptValue, decryptValue } = require("../utils/crypto");
 exports.saveData = async (req, res) => {
   try {
     const { title, value } = req.body;
-    const userId = req.user._id; // match schema field name
+    const userId = req.user._id;
 
     const encryptedValue = encryptValue(value);
 
@@ -19,6 +20,7 @@ exports.saveData = async (req, res) => {
     res.status(201).json({
       status: "success",
       data,
+      message: "Secret added successfully",
     });
   } catch (err) {
     res.status(500).json({
@@ -94,16 +96,19 @@ exports.deleteMultipleItems = async (req, res) => {
       });
     }
 
+    // const objectIds = itemIds.map((id) => new mongoose.Types.ObjectId(id));
+
     const result = await Data.deleteMany({ _id: { $in: itemIds }, userId });
 
     res.status(200).json({
       status: "success",
-      message: `${result.deletedCount} item(s) have been deleted successfully`,
+      message: `${result.deletedCount} item(s) deleted successfully`,
     });
   } catch (err) {
+    console.error("Delete Multiple Error:", err); // <-- Log the actual error
     res.status(500).json({
       status: "error",
-      message: "Something went wrong",
+      message: err.message || "Something went wrong",
     });
   }
 };
@@ -152,6 +157,8 @@ exports.editItem = async (req, res) => {
 exports.getVaultItems = async (req, res) => {
   try {
     const userId = req.user._id;
+
+    const user = await User.findById(userId);
     const { search, page = 1, limit = 50, sort = "-createdAt" } = req.query;
 
     const query = { userId };
@@ -183,6 +190,7 @@ exports.getVaultItems = async (req, res) => {
       total,
       page: parseInt(page),
       limit: parseInt(limit),
+      username: user.username,
       results,
     });
   } catch (err) {
@@ -190,6 +198,40 @@ exports.getVaultItems = async (req, res) => {
     res.status(500).json({
       status: "error",
       message: "Something went wrong",
+    });
+  }
+};
+
+exports.viewItem = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const itemId = req.params.id;
+
+    // Find the secret belonging to the logged-in user
+    const item = await Data.findOne({ userId, _id: itemId });
+
+    if (!item) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Secret not found or does not belong to you",
+      });
+    }
+
+    // Decrypt the value before sending
+    const decryptedValue = decryptValue(item.encryptedValue);
+
+    res.status(200).json({
+      status: "success",
+      _id: item._id,
+      title: item.title,
+      value: decryptedValue,
+      createdAt: item.createdAt,
+    });
+  } catch (err) {
+    console.error("viewItem error:", err);
+    res.status(500).json({
+      status: "error",
+      message: "Something went wrong while fetching the secret",
     });
   }
 };

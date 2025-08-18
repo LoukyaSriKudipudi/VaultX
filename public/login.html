@@ -67,7 +67,6 @@
         justify-content: center;
         align-items: center;
         min-height: 100vh;
-        padding-top: 80px; /* Push below header */
       }
 
       .login-box {
@@ -138,6 +137,10 @@
       .extra-links a:hover {
         text-decoration: underline;
       }
+
+      #message {
+        margin-top: 10px;
+      }
     </style>
   </head>
   <body>
@@ -149,7 +152,7 @@
     <div class="login-container">
       <div class="login-box">
         <h2>Login to VaultX</h2>
-        <form action="/api/login" method="POST">
+        <form id="loginForm" action="/api/login" method="POST">
           <input type="email" name="email" placeholder="Email" required />
           <input
             type="password"
@@ -159,6 +162,7 @@
           />
           <button type="submit">Login</button>
         </form>
+        <p id="message"></p>
         <div class="extra-links">
           <a href="index.html">Home</a>
 
@@ -167,5 +171,6 @@
         </div>
       </div>
     </div>
+    <script src="/js/login.js"></script>
   </body>
 </html>

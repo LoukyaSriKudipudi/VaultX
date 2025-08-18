@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>VaultX 🔐 - Sign Up</title>
-    <link rel="stylesheet" href="index.css" />
+    <!-- <link rel="stylesheet" href="index.css" /> -->
     <style>
       * {
         margin: 0;
@@ -66,7 +66,6 @@
         justify-content: center;
         align-items: center;
         min-height: 100vh;
-        padding-top: 80px;
       }
 
       .signup-box {
@@ -150,6 +149,10 @@
       .terms a:hover {
         text-decoration: underline;
       }
+
+      #message {
+        margin-top: 10px;
+      }
     </style>
   </head>
   <body>
@@ -166,21 +169,24 @@
     <div class="signup-container">
       <div class="signup-box">
         <h2>Create Your VaultX Account</h2>
-        <form action="/api/signup" method="POST">
-          <input type="text" name="name" placeholder="Full Name" required />
+        <form id="signupForm">
+          <input type="text" name="username" placeholder="Full Name" required />
           <input type="email" name="email" placeholder="Email" required />
           <input
             type="password"
             name="password"
             placeholder="Password"
             required
+            minlength="8"
           />
           <input
             type="password"
-            name="confirmPassword"
+            name="passwordConfirm"
             placeholder="Confirm Password"
+            minlength="8"
             required
           />
+          <p id="message"></p>
           <button type="submit">Sign Up</button>
         </form>
         <div class="terms">
@@ -191,5 +197,6 @@
         <p>Already have an account? <a href="login.html">Login</a></p>
       </div>
     </div>
+    <script src="/js/signup.js"></script>
   </body>
 </html>

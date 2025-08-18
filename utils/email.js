@@ -17,6 +17,7 @@ async function sendResetMail(toEmail, resetURL, userName = "User", host) {
       <p>Hello ${userName},</p>
       <p>You requested a password reset. Click the link below to reset your password:</p>
       <a href="${resetURL}">${resetURL}</a>
+      <p>This link will expire in 10 minutes.
       <p>If you did not request this, please ignore this email.</p>
     `,
   };
