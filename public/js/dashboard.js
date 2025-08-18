@@ -11,6 +11,8 @@ const selectAllCheckbox = document.querySelector(
 
 const deleteSelectedBtn = document.getElementById("deleteSelected");
 
+deleteSelectedBtn.style.display = "none";
+
 let searchQuery = "";
 
 // ---------------------
@@ -131,6 +133,7 @@ deleteSelectedBtn.addEventListener("click", async () => {
 
   const data = await res.json();
   alert(data.message || "Items deleted successfully");
+  deleteSelectedBtn.style.display = "none";
 
   loadAndRenderSecrets();
 });
@@ -165,7 +168,10 @@ searchInput.addEventListener("input", () => {
 // ---------------------
 // Select all functionality
 // ---------------------
+
 selectAllCheckbox.addEventListener("change", () => {
+  deleteSelectedBtn.style.display = "flex";
+
   const checkboxes = document.querySelectorAll(".rowCheckbox");
   checkboxes.forEach((cb) => (cb.checked = selectAllCheckbox.checked));
 });
@@ -183,6 +189,8 @@ function updateSelectAllCheckbox() {
 // Update select all when a row checkbox changes
 tableBody.addEventListener("change", (e) => {
   if (e.target.classList.contains("rowCheckbox")) {
+    deleteSelectedBtn.style.display = "flex";
+
     updateSelectAllCheckbox();
   }
 });

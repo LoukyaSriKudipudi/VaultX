@@ -16,7 +16,7 @@
         color: #fff;
         background: #000;
         display: flex;
-        min-height: 100vh;
+        /* min-height: 100vh; */
         overflow-x: hidden;
       }
 
@@ -32,6 +32,34 @@
         display: flex;
         flex-direction: column;
         backdrop-filter: blur(6px);
+      }
+
+      @media (max-width: 600px) {
+        .sidebar {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: auto; /* <-- change from 100% */
+          flex-direction: row;
+          justify-content: space-between;
+          align-items: center;
+          padding: 10px 20px;
+          backdrop-filter: none; /* remove blur */
+          background: #000; /* solid background */
+          z-index: 1000; /* stay on top */
+        }
+
+        .sidebar h2 {
+          display: none; /* hide title */
+        }
+
+        /* Make links appear inline, not stacked */
+        .sidebar a {
+          display: inline-block;
+          margin: 0 5px;
+          padding: 6px 10px;
+        }
       }
 
       .sidebar h2 {
@@ -116,7 +144,7 @@
         padding: 10px 16px;
         width: 220px;
         max-width: 100%;
-        border-radius: 12px;
+        border-radius: 6px;
         border: none;
         outline: none;
         font-size: 14px;
