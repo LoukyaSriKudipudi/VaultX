@@ -294,6 +294,52 @@
       .table-container::-webkit-scrollbar-thumb:hover {
         background: #ffd633;
       }
+
+      /* Hide default checkbox */
+      input[type="checkbox"] {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #ffcc00;
+        border-radius: 4px;
+        background: transparent;
+        cursor: pointer;
+        position: relative;
+        transition: all 0.2s ease;
+      }
+
+      /* Hover effect */
+      input[type="checkbox"]:hover {
+        border-color: #ffd633;
+      }
+
+      /* Checked state */
+      input[type="checkbox"]:checked {
+        background-color: #ffcc00;
+        border-color: #ffcc00;
+      }
+
+      /* Checkmark */
+      input[type="checkbox"]:checked::after {
+        content: "";
+        position: absolute;
+        left: 5px;
+        top: 1px;
+        width: 5px;
+        height: 10px;
+        border: solid #000;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+      }
+
+      /* Optional: Disabled state */
+      input[type="checkbox"]:disabled {
+        border-color: #555;
+        cursor: not-allowed;
+        background: #333;
+      }
     </style>
   </head>
   <body>
