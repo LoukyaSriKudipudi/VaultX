@@ -67,12 +67,10 @@ const CRYPTO_SECRET = process.env.CRYPTO_SECRET;
 if (!CRYPTO_SECRET) throw new Error("CRYPTO_SECRET missing in .env");
 
 // fixed sizes
-const NAME_FIXED_LENGTH = 32;
 const SALT_LENGTH = 16;
 const IV_LENGTH = 12;
 const AUTH_TAG_LENGTH = 16;
 const VERSION_LENGTH = 1;
-const NAME_LENGTH_FIELD = 1;
 
 // derive 32-byte key from secret + salt
 function getKey(salt) {
@@ -99,17 +97,11 @@ async function encryptValue(value) {
   const authTag = cipher.getAuthTag();
   const version = Buffer.from([1]);
 
-  const nameStr = "Loukya Sri Kudipudi";
-  const nameBuf = Buffer.alloc(NAME_FIXED_LENGTH);
-  nameBuf.write(nameStr, "utf8");
-  const nameLength = Buffer.from([nameStr.length]);
-
+  // combine everything: version + salt + iv + authTag + ciphertext
   const packageBuffer = Buffer.concat([
     version,
     salt,
     iv,
-    nameLength,
-    nameBuf,
     authTag,
     Buffer.from(encrypted, "hex"),
   ]);
@@ -129,21 +121,13 @@ async function decryptValue(encryptedValue) {
 
     const salt = buffer.subarray(1, 1 + SALT_LENGTH);
     const iv = buffer.subarray(1 + SALT_LENGTH, 1 + SALT_LENGTH + IV_LENGTH);
-
-    const nameLen = buffer.readUInt8(1 + SALT_LENGTH + IV_LENGTH);
-    const nameBuf = buffer.subarray(
-      1 + SALT_LENGTH + IV_LENGTH + NAME_LENGTH_FIELD,
-      1 + SALT_LENGTH + IV_LENGTH + NAME_LENGTH_FIELD + NAME_FIXED_LENGTH
-    );
-    const name = nameBuf.subarray(0, nameLen).toString("utf8");
-
-    const authTagStart =
-      1 + SALT_LENGTH + IV_LENGTH + NAME_LENGTH_FIELD + NAME_FIXED_LENGTH;
     const authTag = buffer.subarray(
-      authTagStart,
-      authTagStart + AUTH_TAG_LENGTH
+      1 + SALT_LENGTH + IV_LENGTH,
+      1 + SALT_LENGTH + IV_LENGTH + AUTH_TAG_LENGTH
     );
-    const ciphertext = buffer.subarray(authTagStart + AUTH_TAG_LENGTH);
+    const ciphertext = buffer.subarray(
+      1 + SALT_LENGTH + IV_LENGTH + AUTH_TAG_LENGTH
+    );
 
     const key = await getKey(salt);
     const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
