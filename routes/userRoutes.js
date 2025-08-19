@@ -2,6 +2,9 @@ const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/userController");
 const authController = require("../controllers/authController");
+const multer = require("multer");
+
+const upload = multer({ dest: "public/img/users" });
 
 // signup
 router.post("/signup", userController.createUser);
@@ -10,6 +13,7 @@ router.get("/user", authController.protect, userController.getUser);
 router.post(
   "/editUserNameAndEmail",
   authController.protect,
+  upload.single("photo"),
   userController.editUserNameAndEmail
 );
 router.post(

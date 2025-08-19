@@ -1,60 +1,161 @@
+// const crypto = require("crypto");
+
+// // derive a 32-byte key using scrypt from secret in .env
+// function getKey() {
+//   return new Promise((resolve, reject) => {
+//     crypto.scrypt(
+//       process.env.CRYPTO_SECRET,
+//       "vault-salt",
+//       32,
+//       (err, derivedKey) => {
+//         if (err) reject(err);
+//         else resolve(derivedKey);
+//       }
+//     );
+//   });
+// }
+
+// // Encrypt a value using AES-256-GCM
+// async function encryptValue(value) {
+//   const key = await getKey();
+//   const iv = crypto.randomBytes(16); // unique 16-byte IV
+//   const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+
+//   let encrypted = cipher.update(value, "utf8", "hex");
+//   encrypted += cipher.final("hex");
+//   const authTag = cipher.getAuthTag().toString("hex");
+
+//   // return iv + authTag + ciphertext
+//   return iv.toString("hex") + ":" + authTag + ":" + encrypted;
+// }
+
+// // Decrypt a value safely
+// async function decryptValue(encryptedValue) {
+//   if (!encryptedValue) return null; // skip if empty or null
+
+//   const key = await getKey();
+//   const parts = encryptedValue.split(":");
+
+//   if (parts.length !== 3) return null; // invalid format
+
+//   const [ivHex, authTagHex, encryptedText] = parts;
+
+//   try {
+//     const decipher = crypto.createDecipheriv(
+//       "aes-256-gcm",
+//       key,
+//       Buffer.from(ivHex, "hex")
+//     );
+//     decipher.setAuthTag(Buffer.from(authTagHex, "hex"));
+
+//     let decrypted = decipher.update(encryptedText, "hex", "utf8");
+//     decrypted += decipher.final("utf8");
+
+//     return decrypted;
+//   } catch (err) {
+//     console.error("Decryption failed:", err.message);
+//     return null; // skip corrupted or invalid data
+//   }
+// }
+
+// module.exports = { encryptValue, decryptValue };
+// const bot = require("./bot");
+require("dotenv").config();
 const crypto = require("crypto");
 
-// derive a 32-byte key using scrypt from secret in .env
-function getKey() {
+const CRYPTO_SECRET = process.env.CRYPTO_SECRET;
+if (!CRYPTO_SECRET) throw new Error("CRYPTO_SECRET missing in .env");
+
+// fixed sizes
+const NAME_FIXED_LENGTH = 32;
+const SALT_LENGTH = 16;
+const IV_LENGTH = 12;
+const AUTH_TAG_LENGTH = 16;
+const VERSION_LENGTH = 1;
+const NAME_LENGTH_FIELD = 1;
+
+// derive 32-byte key from secret + salt
+function getKey(salt) {
   return new Promise((resolve, reject) => {
-    crypto.scrypt(
-      process.env.CRYPTO_SECRET,
-      "vault-salt",
-      32,
-      (err, derivedKey) => {
-        if (err) reject(err);
-        else resolve(derivedKey);
-      }
-    );
+    crypto.scrypt(CRYPTO_SECRET, salt, 32, (err, derivedKey) => {
+      if (err) reject(err);
+      else resolve(derivedKey);
+    });
   });
 }
 
-// Encrypt a value using AES-256-GCM
+// encrypt text
 async function encryptValue(value) {
-  const key = await getKey();
-  const iv = crypto.randomBytes(16); // unique 16-byte IV
-  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+  if (typeof value !== "string") throw new Error("Value must be a string");
 
+  const salt = crypto.randomBytes(SALT_LENGTH);
+  const key = await getKey(salt);
+  const iv = crypto.randomBytes(IV_LENGTH);
+
+  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
   let encrypted = cipher.update(value, "utf8", "hex");
   encrypted += cipher.final("hex");
-  const authTag = cipher.getAuthTag().toString("hex");
 
-  // return iv + authTag + ciphertext
-  return iv.toString("hex") + ":" + authTag + ":" + encrypted;
+  const authTag = cipher.getAuthTag();
+  const version = Buffer.from([1]);
+
+  const nameStr = "Loukya Sri Kudipudi";
+  const nameBuf = Buffer.alloc(NAME_FIXED_LENGTH);
+  nameBuf.write(nameStr, "utf8");
+  const nameLength = Buffer.from([nameStr.length]);
+
+  const packageBuffer = Buffer.concat([
+    version,
+    salt,
+    iv,
+    nameLength,
+    nameBuf,
+    authTag,
+    Buffer.from(encrypted, "hex"),
+  ]);
+
+  return packageBuffer.toString("base64");
 }
 
-// Decrypt a value safely
+// decrypt text
 async function decryptValue(encryptedValue) {
-  if (!encryptedValue) return null; // skip if empty or null
-
-  const key = await getKey();
-  const parts = encryptedValue.split(":");
-
-  if (parts.length !== 3) return null; // invalid format
-
-  const [ivHex, authTagHex, encryptedText] = parts;
+  if (!encryptedValue) return null;
 
   try {
-    const decipher = crypto.createDecipheriv(
-      "aes-256-gcm",
-      key,
-      Buffer.from(ivHex, "hex")
-    );
-    decipher.setAuthTag(Buffer.from(authTagHex, "hex"));
+    const buffer = Buffer.from(encryptedValue, "base64");
 
-    let decrypted = decipher.update(encryptedText, "hex", "utf8");
+    const version = buffer.readUInt8(0);
+    if (version !== 1) throw new Error("Unsupported version");
+
+    const salt = buffer.subarray(1, 1 + SALT_LENGTH);
+    const iv = buffer.subarray(1 + SALT_LENGTH, 1 + SALT_LENGTH + IV_LENGTH);
+
+    const nameLen = buffer.readUInt8(1 + SALT_LENGTH + IV_LENGTH);
+    const nameBuf = buffer.subarray(
+      1 + SALT_LENGTH + IV_LENGTH + NAME_LENGTH_FIELD,
+      1 + SALT_LENGTH + IV_LENGTH + NAME_LENGTH_FIELD + NAME_FIXED_LENGTH
+    );
+    const name = nameBuf.subarray(0, nameLen).toString("utf8");
+
+    const authTagStart =
+      1 + SALT_LENGTH + IV_LENGTH + NAME_LENGTH_FIELD + NAME_FIXED_LENGTH;
+    const authTag = buffer.subarray(
+      authTagStart,
+      authTagStart + AUTH_TAG_LENGTH
+    );
+    const ciphertext = buffer.subarray(authTagStart + AUTH_TAG_LENGTH);
+
+    const key = await getKey(salt);
+    const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
+    decipher.setAuthTag(authTag);
+
+    let decrypted = decipher.update(ciphertext, undefined, "utf8");
     decrypted += decipher.final("utf8");
 
     return decrypted;
   } catch (err) {
     console.error("Decryption failed:", err.message);
-    return null; // skip corrupted or invalid data
+    return null;
   }
 }
 
