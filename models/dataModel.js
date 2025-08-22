@@ -1,5 +1,12 @@
 const mongoose = require("mongoose");
 
+const fileSchema = new mongoose.Schema({
+  filename: String,
+  key: { type: String, required: true },
+  mimetype: String,
+  size: Number,
+});
+
 const dataSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -15,6 +22,7 @@ const dataSchema = new mongoose.Schema({
     type: String,
     required: [true, "Please provide a value"],
   },
+  fileinfo: [fileSchema],
   createdAt: { type: Date, default: Date.now },
 });
 

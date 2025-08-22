@@ -1,9 +1,15 @@
 const SecretForm = document.querySelector("#SecretForm");
+const fileInput = document.querySelector("#file");
 const titleInput = document.getElementById("title");
 const secretInput = document.getElementById("secret");
 const formTitle = document.getElementById("formTitle");
 const submitBtn = document.getElementById("submitBtn");
 const message = document.getElementById("message");
+const uploadedFilesFilenames = document.getElementById(
+  "uploadedFilesFilenames"
+);
+const hideContainer = document.querySelector("#hideContainer");
+
 const token = localStorage.getItem("token");
 
 // Redirect if no token
@@ -11,6 +17,11 @@ if (!token) window.location.href = "/login.html";
 
 // Get secret id from URL hash
 const secretId = window.location.hash.substring(1);
+
+// Hide container by default if no secretId
+if (!secretId) {
+  hideContainer.style.display = "none";
+}
 
 // Load existing secret if editing
 async function loadSecret(id) {
@@ -20,8 +31,25 @@ async function loadSecret(id) {
       headers: { Authorization: "Bearer " + token },
     });
     const data = await res.json();
+
     titleInput.value = data.title || "";
     secretInput.value = data.value || "";
+
+    // Clear any previous entries
+    uploadedFilesFilenames.innerHTML = "";
+
+    if (data.files && data.files.length > 0) {
+      data.files.forEach((file) => {
+        const filenameEl = document.createElement("p");
+        filenameEl.textContent = file.filename || "Unnamed file";
+        uploadedFilesFilenames.append(filenameEl);
+      });
+      hideContainer.style.display = "block";
+    } else {
+      uploadedFilesFilenames.textContent = "No attachments";
+      hideContainer.style.display = "block";
+    }
+
     formTitle.textContent = "Edit Secret";
     submitBtn.textContent = "Update Secret";
   } catch (err) {
@@ -31,19 +59,26 @@ async function loadSecret(id) {
   }
 }
 
-// Unified form submit handler
+// Handle form submission
 SecretForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const values = {
-    title: titleInput.value.trim(),
-    value: secretInput.value.trim(),
-  };
+  const title = titleInput.value.trim();
+  const value = secretInput.value.trim();
+  const files = fileInput.files;
 
-  if (!values.title || !values.value) {
+  if (!title || !value) {
     message.style.color = "red";
     message.textContent = "Title and Secret cannot be empty!";
     return;
+  }
+
+  const formData = new FormData();
+  formData.append("title", title);
+  formData.append("value", value);
+
+  for (let i = 0; i < files.length; i++) {
+    formData.append("files", files[i]);
   }
 
   const method = secretId ? "PATCH" : "POST";
@@ -53,10 +88,9 @@ SecretForm.addEventListener("submit", async (e) => {
     const res = await fetch(url, {
       method,
       headers: {
-        "Content-Type": "application/json",
         Authorization: "Bearer " + token,
       },
-      body: JSON.stringify(values),
+      body: formData,
     });
 
     const data = await res.json();
@@ -64,11 +98,12 @@ SecretForm.addEventListener("submit", async (e) => {
     if (res.ok) {
       message.style.color = "green";
       message.textContent = data.message || "Secret saved successfully!";
-
       setTimeout(() => (message.textContent = ""), 3000);
 
-      // If adding new secret, reset form
-      if (!secretId) SecretForm.reset();
+      if (!secretId) {
+        SecretForm.reset();
+        hideContainer.style.display = "none";
+      }
     } else {
       message.style.color = "red";
       message.textContent =

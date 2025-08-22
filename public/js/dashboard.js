@@ -24,7 +24,7 @@ function isTokenValid(token) {
 
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
-    const now = Math.floor(Date.now() / 1000); // current time in seconds
+    const now = Math.floor(Date.now() / 1000);
     return payload.exp > now;
   } catch (err) {
     return false;
@@ -83,15 +83,11 @@ function renderSecrets(secrets) {
   secrets.forEach((secret, index) => {
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td><input class="rowCheckbox" type="checkbox" data-id="${
+      <td><input id="checkbox" class="rowCheckbox" type="checkbox" data-id="${
         secret._id
       }" /></td>
       <td>${index + 1}</td>
-      <td>${secret.title}</td>
-      <td class="deleteViewBtns">
-        <button class="deleteBtn" data-id="${secret._id}">Delete</button>
-        <button class="viewBtn" data-id="${secret._id}">View</button>
-      </td>
+      <td class="viewBtn" data-id="${secret._id}" >${secret.title}</td>
     `;
     tableBody.appendChild(row);
   });
@@ -109,18 +105,19 @@ async function loadAndRenderSecrets() {
 // ---------------------
 // Delete secret
 // ---------------------
-async function deleteSecret(secretId) {
-  if (!confirm("Are you sure you want to delete this secret?")) return;
 
-  await fetch(`/v1/data/vault/${secretId}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: "Bearer " + token,
-    },
-  });
+// async function deleteSecret(secretId) {
+//   if (!confirm("Are you sure you want to delete this secret?")) return;
 
-  loadAndRenderSecrets();
-}
+//   await fetch(`/v1/data/vault/${secretId}`, {
+//     method: "DELETE",
+//     headers: {
+//       Authorization: "Bearer " + token,
+//     },
+//   });
+
+//   loadAndRenderSecrets();
+// }
 
 // ---------------------
 // Delete multiple secrets
@@ -157,11 +154,11 @@ deleteSelectedBtn.addEventListener("click", async () => {
 tableBody.addEventListener("click", (e) => {
   const target = e.target;
 
-  // Delete
-  if (target.classList.contains("deleteBtn")) {
-    const secretId = target.dataset.id;
-    deleteSecret(secretId);
-  }
+  // // Delete
+  // if (target.classList.contains("deleteBtn")) {
+  //   const secretId = target.dataset.id;
+  //   deleteSecret(secretId);
+  // }
 
   // View
   if (target.classList.contains("viewBtn")) {

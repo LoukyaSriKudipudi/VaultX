@@ -1,9 +1,10 @@
 const Data = require("../models/dataModel");
 const User = require("../models/userModel");
 const mongoose = require("mongoose");
+const { uploadFile, getFileUrl, deleteFile } = require("../utils/s3");
+const { encryptValue, decryptValue } = require("../utils/crypto");
 
 // savedata
-const { encryptValue, decryptValue } = require("../utils/crypto");
 exports.saveData = async (req, res) => {
   try {
     const { title, value } = req.body;
@@ -11,10 +12,16 @@ exports.saveData = async (req, res) => {
 
     const encryptedValue = await encryptValue(value);
 
+    let filesinfo = [];
+    if (req.files && req.files.length > 0) {
+      filesinfo = await Promise.all(req.files.map(uploadFile));
+    }
+
     const data = await Data.create({
       userId,
       title,
       encryptedValue,
+      fileinfo: filesinfo,
     });
 
     res.status(201).json({
@@ -70,6 +77,10 @@ exports.deleteItem = async (req, res) => {
       });
     }
 
+    if (item.fileinfo && item.fileinfo.length > 0) {
+      await Promise.all(item.fileinfo.map((file) => deleteFile(file.key)));
+    }
+
     await item.deleteOne();
 
     res.status(200).json({
@@ -84,6 +95,7 @@ exports.deleteItem = async (req, res) => {
   }
 };
 
+// delete multiple
 exports.deleteMultipleItems = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -96,7 +108,14 @@ exports.deleteMultipleItems = async (req, res) => {
       });
     }
 
-    // const objectIds = itemIds.map((id) => new mongoose.Types.ObjectId(id));
+    // const objectIds = itemIds.map((id) => mongoose.Types.ObjectId(id));
+    const items = await Data.find({ _id: { $in: itemIds }, userId });
+
+    for (const item of items) {
+      if (item.fileinfo && item.fileinfo.length > 0) {
+        await Promise.all(item.fileinfo.map((file) => deleteFile(file.key)));
+      }
+    }
 
     const result = await Data.deleteMany({ _id: { $in: itemIds }, userId });
 
@@ -114,7 +133,6 @@ exports.deleteMultipleItems = async (req, res) => {
 };
 
 // edit data
-
 exports.editItem = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -135,6 +153,23 @@ exports.editItem = async (req, res) => {
         status: "fail",
         message: "Item not found or does not belong to you",
       });
+    }
+
+    let newFiles = [];
+    if (req.files && req.files.length > 0) {
+      // Filter out files that already exist (before upload)
+      const filesToUpload = req.files.filter(
+        (file) =>
+          !item.fileinfo.some(
+            (existing) => existing.filename === file.originalname
+          )
+      );
+
+      if (filesToUpload.length > 0) {
+        const uploadedFiles = await Promise.all(filesToUpload.map(uploadFile));
+        item.fileinfo = [...item.fileinfo, ...uploadedFiles];
+        newFiles = uploadedFiles;
+      }
     }
 
     item.title = title;
@@ -220,11 +255,19 @@ exports.viewItem = async (req, res) => {
     // Decrypt the value before sending
     const decryptedValue = await decryptValue(item.encryptedValue);
 
+    const files = item.fileinfo.map((file) => ({
+      filename: file.filename,
+      key: file.key,
+      mimetype: file.mimetype,
+      size: file.size,
+    }));
+
     res.status(200).json({
       status: "success",
       _id: item._id,
       title: item.title,
       value: decryptedValue,
+      files: files,
       createdAt: item.createdAt,
     });
   } catch (err) {
