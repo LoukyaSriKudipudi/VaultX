@@ -278,3 +278,45 @@ exports.viewItem = async (req, res) => {
     });
   }
 };
+
+exports.getFiles = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const key = req.params.key;
+
+    if (!key) {
+      return res.status(400).json({
+        status: "fail",
+        message: "File key is required",
+      });
+    }
+
+    // Find item containing this file key belonging to this user
+    const item = await Data.findOne({
+      userId,
+      "fileinfo.key": key,
+    });
+
+    if (!item) {
+      return res.status(404).json({
+        status: "fail",
+        message: "File not found or does not belong to you",
+      });
+    }
+
+    // Generate pre-signed URL for download
+    const fileUrl = await getFileUrl(key);
+
+    res.status(200).json({
+      status: "success",
+      url: fileUrl,
+      filename: item.fileinfo.find((f) => f.key === key)?.filename || "file",
+    });
+  } catch (err) {
+    console.error("getFiles error:", err);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to fetch file",
+    });
+  }
+};

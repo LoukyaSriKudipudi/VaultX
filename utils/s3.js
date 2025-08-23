@@ -55,6 +55,7 @@ async function getFileUrl(key, expiresIn = 300) {
   const command = new GetObjectCommand({
     Bucket: BUCKET_NAME,
     Key: key,
+    ResponseContentDisposition: "attachment",
   });
 
   return getSignedUrl(s3, command, { expiresIn });

@@ -1,6 +1,3 @@
-// ---------------------
-// DOM Elements
-// ---------------------
 const token = localStorage.getItem("token");
 const logout = document.querySelector("#logout");
 const tableBody = document.getElementById("tableBody");
@@ -14,10 +11,6 @@ const deleteSelectedBtn = document.getElementById("deleteSelected");
 deleteSelectedBtn.style.display = "none";
 
 let searchQuery = "";
-
-// ---------------------
-// Auth check
-// ---------------------
 
 function isTokenValid(token) {
   if (!token) return false;
@@ -41,9 +34,6 @@ logout.addEventListener("click", () => {
   window.location.href = "/login.html";
 });
 
-// ---------------------
-// Fetch secrets from API
-// ---------------------
 async function getSecrets() {
   const url = searchQuery
     ? `/v1/data/vault?search=${encodeURIComponent(searchQuery)}`
@@ -67,9 +57,6 @@ async function getSecrets() {
   return data.results || [];
 }
 
-// ---------------------
-// Render secrets
-// ---------------------
 function renderSecrets(secrets) {
   tableBody.innerHTML = "";
 
@@ -93,18 +80,11 @@ function renderSecrets(secrets) {
   });
 }
 
-// ---------------------
-// Load secrets
-// ---------------------
 async function loadAndRenderSecrets() {
   const secrets = await getSecrets();
   renderSecrets(secrets);
   updateSelectAllCheckbox();
 }
-
-// ---------------------
-// Delete secret
-// ---------------------
 
 // async function deleteSecret(secretId) {
 //   if (!confirm("Are you sure you want to delete this secret?")) return;
@@ -119,9 +99,8 @@ async function loadAndRenderSecrets() {
 //   loadAndRenderSecrets();
 // }
 
-// ---------------------
 // Delete multiple secrets
-// ---------------------
+
 deleteSelectedBtn.addEventListener("click", async () => {
   const selectedCheckboxes = document.querySelectorAll(".rowCheckbox:checked");
   if (selectedCheckboxes.length === 0) {
@@ -148,9 +127,6 @@ deleteSelectedBtn.addEventListener("click", async () => {
   loadAndRenderSecrets();
 });
 
-// ---------------------
-// Event delegation for table buttons
-// ---------------------
 tableBody.addEventListener("click", (e) => {
   const target = e.target;
 
@@ -167,17 +143,10 @@ tableBody.addEventListener("click", (e) => {
   }
 });
 
-// ---------------------
-// Search functionality
-// ---------------------
 searchInput.addEventListener("input", () => {
   searchQuery = searchInput.value.trim();
   loadAndRenderSecrets();
 });
-
-// ---------------------
-// Select all functionality
-// ---------------------
 
 selectAllCheckbox.addEventListener("change", () => {
   deleteSelectedBtn.style.display = "flex";
@@ -205,7 +174,4 @@ tableBody.addEventListener("change", (e) => {
   }
 });
 
-// ---------------------
-// Initial load
-// ---------------------
 loadAndRenderSecrets();

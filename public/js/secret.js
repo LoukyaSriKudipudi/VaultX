@@ -30,18 +30,21 @@ async function loadSecret(id) {
     const res = await fetch(`/v1/data/vault/${id}`, {
       headers: { Authorization: "Bearer " + token },
     });
-    const data = await res.json();
 
+    if (!res.ok) throw new Error("Failed to fetch secret");
+
+    const data = await res.json();
     titleInput.value = data.title || "";
     secretInput.value = data.value || "";
 
-    // Clear any previous entries
-    uploadedFilesFilenames.innerHTML = "";
+    uploadedFilesFilenames.innerHTML = ""; // Clear previous entries
 
     if (data.files && data.files.length > 0) {
       data.files.forEach((file) => {
         const filenameEl = document.createElement("p");
         filenameEl.textContent = file.filename || "Unnamed file";
+        filenameEl.setAttribute("data-id", file.key);
+        filenameEl.classList.add("attachedFile");
         uploadedFilesFilenames.append(filenameEl);
       });
       hideContainer.style.display = "block";
@@ -87,9 +90,7 @@ SecretForm.addEventListener("submit", async (e) => {
   try {
     const res = await fetch(url, {
       method,
-      headers: {
-        Authorization: "Bearer " + token,
-      },
+      headers: { Authorization: "Bearer " + token },
       body: formData,
     });
 
@@ -113,6 +114,64 @@ SecretForm.addEventListener("submit", async (e) => {
     console.error(err);
     message.style.color = "red";
     message.textContent = "Network error. Please try again.";
+  }
+});
+
+// // Download file by key
+// async function getFile(key) {
+//   try {
+//     const res = await fetch(`/v1/data/vault/file/${key}`, {
+//       method: "GET",
+//       headers: { Authorization: "Bearer " + token },
+//     });
+
+//     if (!res.ok) throw new Error("Failed to download file");
+
+//     const blob = await res.blob();
+//     const url = URL.createObjectURL(blob);
+
+//     // Trigger download
+//     const a = document.createElement("a");
+//     a.href = url;
+//     a.download = key;
+//     document.body.appendChild(a);
+//     a.click();
+//     a.remove();
+
+//     URL.revokeObjectURL(url);
+//   } catch (err) {
+//     console.error(err);
+//     alert("Failed to download file.");
+//   }
+// }
+
+async function getFile(key) {
+  try {
+    const res = await fetch(`/v1/data/vault/file/${encodeURIComponent(key)}`, {
+      headers: { Authorization: "Bearer " + token },
+    });
+    if (!res.ok) throw new Error("Failed to get file URL");
+
+    const { url, filename } = await res.json();
+    // window.open(url, "_blank");
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename || "";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } catch (err) {
+    console.error(err);
+    alert("Failed to download file.");
+  }
+}
+
+// Event delegation for attached files
+uploadedFilesFilenames.addEventListener("click", (e) => {
+  if (e.target.classList.contains("attachedFile")) {
+    const key = e.target.dataset.id;
+    if (key) getFile(key);
   }
 });
 

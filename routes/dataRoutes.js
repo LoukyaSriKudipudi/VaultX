@@ -12,6 +12,8 @@ router.post(
   dataController.saveData
 );
 
+router.get("/vault/file/:key", authController.protect, dataController.getFiles);
+
 router.get("/vault", authController.protect, dataController.getVaultItems);
 router.patch(
   "/vault/:id",
