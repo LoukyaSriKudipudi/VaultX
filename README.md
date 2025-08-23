@@ -3,7 +3,7 @@
 ## Overview
 
 VaultX is a **privacy-first, end-to-end secure web application** that allows users to **store, manage, and retrieve sensitive information** and **attachments** safely.  
-Built with **modern authentication**, **AES-256-GCM encryption**, and **short-lived pre-signed URLs**, Vault ensures that **only the rightful owner** can access their secrets and files.
+Built with **modern authentication**, **AES-256-GCM encryption**, and **short-lived pre-signed URLs**, VaultX ensures that **only the rightful owner** can access their secrets and files.
 
 ---
 
@@ -12,7 +12,10 @@ Built with **modern authentication**, **AES-256-GCM encryption**, and **short-li
 ### 1. User Authentication & Account Management
 
 - **Sign Up & Login** – Secure user registration and login.
-- **Forgot & Reset Password** – Password reset via secure email link.
+- **Password Security** –
+  - Passwords are **hashed using bcrypt** before storage (never stored in plaintext).
+  - Reset password tokens are **hashed in the database**; only the **hashed token** is compared during validation.
+- **Forgot & Reset Password** – Password reset via secure email link without exposing raw tokens.
 - **Profile Management**:
   - Change password, name, and email.
   - Delete account (removes all user data permanently).
@@ -47,6 +50,8 @@ Built with **modern authentication**, **AES-256-GCM encryption**, and **short-li
 - **End-to-End Encryption at Rest** – All user secrets are stored encrypted.
 - **Short-Lived Download URLs** – Minimizes risk of unauthorized file access.
 - **Strict Authorization** – Users cannot view or manipulate others’ data.
+- **Password Hashing** – Uses bcrypt pre-save middleware to store only hashed passwords.
+- **Token Security** – Reset password tokens are hashed in DB and validated securely.
 - **Modern Auth Stack** – Secure password hashing and token-based authentication.
 
 ---
@@ -59,5 +64,21 @@ Built with **modern authentication**, **AES-256-GCM encryption**, and **short-li
 - **Authentication**: JWT (JSON Web Tokens)
 - **Encryption**: AES-256-GCM for data encryption
 - **File Storage**: Amazon S3 with pre-signed URLs
+- **Password Hashing**: bcrypt
 
 ---
+
+## Future Enhancements (Planned)
+
+- **Two-Factor Authentication (2FA)** – Extra login security.
+- **Rate Limiting & Bruteforce Protection** – Defend against automated attacks.
+- **Activity Logs / Audit Trail** – Transparency on account activity.
+- **Secret Sharing (with Expiry)** – Temporary sharing of confidential data.
+- **Trash / Recovery for Deleted Secrets** – Accidental deletion protection.
+- **Optional Client-Side Encryption** – True zero-knowledge storage.
+
+---
+
+## License
+
+This project is licensed under the **MIT License**.
