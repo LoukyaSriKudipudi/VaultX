@@ -73,7 +73,7 @@ function renderSecrets(secrets) {
       <td><input id="checkbox" class="rowCheckbox" type="checkbox" data-id="${
         secret._id
       }" /></td>
-      <td>${index + 1}</td>
+      <td class="sNo">${index + 1}</td>
       <td class="viewBtn" data-id="${secret._id}" >${secret.title}</td>
     `;
     tableBody.appendChild(row);

@@ -214,19 +214,31 @@ exports.resetPassword = async (req, res) => {
   }
 };
 
+const { deleteFile } = require("../utils/s3");
+
 // delete user
 exports.deleteUser = async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.user._id);
+    const user = await User.findById(req.user._id);
     if (!user) {
       return res
         .status(404)
         .json({ status: "fail", message: "User not found" });
     }
 
+    const data = await Data.find({ userId: user._id });
+
+    const keys = data.map((d) => d.fileinfo.map((f) => f.key));
+
+    for (const item of data) {
+      if (item.fileinfo && item.fileinfo.length > 0) {
+        await Promise.all(item.fileinfo.map((file) => deleteFile(file.key)));
+      }
+    }
+
     // delete related data
     await Data.deleteMany({ userId: req.user._id });
-
+    await user.deleteOne();
     res.status(200).json({
       status: "success",
       message: "User account and all related data deleted permanently.",
