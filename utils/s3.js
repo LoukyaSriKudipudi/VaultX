@@ -16,11 +16,6 @@ const s3 = new S3Client({
 
 const BUCKET_NAME = process.env.AWS_BUCKET_NAME;
 
-/**
- * Uploads a file buffer to S3
- * @param {Object} file - Multer file object (memoryStorage)
- * @returns {Object} uploaded file info
- */
 async function uploadFile(file) {
   if (!file || !file.buffer) throw new Error("File buffer is missing");
 
@@ -43,12 +38,6 @@ async function uploadFile(file) {
   };
 }
 
-/**
- * Generates a temporary signed URL for viewing/downloading the file
- * @param {string} key - S3 object key
- * @param {number} expiresIn - expiration time in seconds (default 300)
- * @returns {string} signed URL
- */
 async function getFileUrl(key, expiresIn = 300) {
   if (!key) throw new Error("S3 key is required for signed URL");
 
@@ -61,10 +50,6 @@ async function getFileUrl(key, expiresIn = 300) {
   return getSignedUrl(s3, command, { expiresIn });
 }
 
-/**
- * Deletes a file from S3
- * @param {string} key - S3 object key
- */
 async function deleteFile(key) {
   if (!key) return;
 
